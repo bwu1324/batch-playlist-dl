@@ -1,0 +1,10 @@
+{
+	"playlistLink": "",
+	"outputPath": "./",
+	"outputExt": ".aac",
+	"codec": "aac",
+	"maxParallel": 100,
+	"maxRetries": 5,
+	"resume": false,
+	"test": false
+}
