@@ -6,6 +6,7 @@ const path = require('path');
 
 const settings = require(path.join(__dirname, 'settings.json'));
 
+var saveProgress;
 var globalPlaylist;
 var index = 0;
 var processing = 0;
@@ -45,8 +46,6 @@ async function getPlaylist() {
 		console.log(`\nPlaylist name: ${playlist.title}\nURL: ${playlist.url}\nFound ${playlist.items.length} videos\n`);
 	}
 
-	fs.writeFileSync(path.join(settings.outputPath, 'temp.json'), JSON.stringify(playlist));
-
 	return playlist;
 }
 
@@ -67,14 +66,12 @@ function process(i) {
 			globalPlaylist.items[i].processed = true;
 			processing--;
 
-			fs.writeFileSync(path.join(settings.outputPath, 'temp.json'), JSON.stringify(globalPlaylist));
 			queue();
 		} else {
 			globalPlaylist.items[i].processed = false;
 			globalPlaylist.items[i].retries++;
 			processing--;
 
-			fs.writeFileSync(path.join(settings.outputPath, 'temp.json'), JSON.stringify(globalPlaylist));
 			queue();
 		}
 		subprocess.kill();
@@ -120,6 +117,7 @@ async function queue() {
 					console.log(`Tried ${settings.maxRetries} times but video: ${globalPlaylist.items[i].title} failed to download`);
 				}
 			}
+			clearInterval(saveProgress);
 			fs.unlinkSync(path.join(settings.outputPath, 'temp.json'));
 			console.log('Finished downloading');
 		}
@@ -138,6 +136,11 @@ async function queue() {
 		console.log('Set to test mode, downloading first video');
 		process(0);
 	} else {
+		fs.writeFileSync(path.join(settings.outputPath, 'temp.json'), JSON.stringify(globalPlaylist));
+		saveProgress = setInterval(() => {
+			fs.writeFileSync(path.join(settings.outputPath, 'temp.json'), JSON.stringify(globalPlaylist));
+		}, 5000);
+
 		setTimeout(() => {
 			queue()
 		}, 3000);
